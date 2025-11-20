@@ -1,7 +1,7 @@
-module top #(
+module f1_lights #(
     parameter WIDTH = 7     //no. of bits in delay counter from lfsr
 )(
-    input logic[4:0] N,     //clock divider value
+    input logic[15:0] N,     //clock divider value
     input logic clk,
     input logic rst,
     input logic trigger,
@@ -10,7 +10,7 @@ module top #(
     logic tick;
     logic time_out;
     logic en;
-    logic [6:0] K;
+    logic [WIDTH-1:0] K;
     logic cmd_seq;
     logic cmd_delay;
 
@@ -23,6 +23,7 @@ module top #(
     );
     lfsr_7 random_delay(    //random delay generator
         .clk(clk),
+        .rst(rst),
         .data_out(K)
     );
     delay delay(    //counts down the random delay
@@ -32,7 +33,6 @@ module top #(
         .clk(clk),
         .time_out(time_out)
     );
-    assign en = cmd_seq?(tick : time_out);  //multiplexer
     f1_fsm fsm(     //state machine
         .rst(rst),
         .en(en),
@@ -42,5 +42,5 @@ module top #(
         .cmd_seq(cmd_seq),
         .cmd_delay(cmd_delay)
     );
-
+    assign en = cmd_seq ? tick : time_out;  //multiplexer
 endmodule

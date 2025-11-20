@@ -18,7 +18,7 @@ int main(int argc, char **argv, char **env) {
   // init Vbuddy
   if (vbdOpen()!=1) return(-1);
   vbdHeader("L3T4: Lights Out & Away We Go!");
-  vbdSetMode(0);
+  vbdSetMode(1);    // set Vbuddy to one shot mode
 
   // initialize simulation inputs
   top->N = 25;
@@ -29,6 +29,7 @@ int main(int argc, char **argv, char **env) {
   bool lights_off_event = false; 
   bool timer_started = false;
   bool arm_reaction_logic = false; 
+  bool button_pressed = false;
   int current_state = 0;
   int previous_state = 0;
 
@@ -46,7 +47,11 @@ int main(int argc, char **argv, char **env) {
       tfp->dump(2*simcyc + tick);
     }
     
-    top->trigger = vbdFlag();   //used to start the sequence
+    button_pressed = vbdFlag();   //read button press from vbuddy
+    top->trigger = 0;          //default trigger to 0
+    if (current_state == 0 && !timer_started && !lights_off_event) {
+        top->trigger = button_pressed;
+    }
     vbdBar(top->data_out & 0xFF);   //display lights on vbuddy
 
     //detecting when to start reaction timer
@@ -78,7 +83,7 @@ int main(int argc, char **argv, char **env) {
     if (timer_started) {
         // Check if user pressed button (trigger went high again)
         // Note: Since top->trigger is driven by vbdFlag(), checking top->trigger here works.
-        if (top->trigger) {
+        if (button_pressed) {
             int reaction_time = vbdElapsed(); // Get elapsed time in ms
             
             // Display reaction time on 7-segment display
